@@ -37,8 +37,6 @@ Masked learning of a Transformer (similar to ESM2); downstream tasks to do class
 ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
 │                         generated with `pip freeze > requirements.txt`
 │
-├── setup.cfg          <- Configuration file for flake8
-│
 └── analysis_src   <- Source code for use in this project.
     │
     ├── __init__.py             <- Makes analysis_src a Python module
