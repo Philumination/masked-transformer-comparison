@@ -1,5 +1,7 @@
 name: masked-transformer-comparison
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
 dependencies:
   - python=3.10
@@ -18,6 +20,10 @@ dependencies:
   - pytest
   - scanpy
   - anndata
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=11.8
   - pip:
     - python-dotenv
     - mkdocs
