@@ -32,7 +32,7 @@ if __name__ == "__main__":
 import pandas as pd
 import numpy as np
 
-def preprocess_age(adata):
+def preprocess_data(adata):
     # preprocess age column
     
     age_numeric = []
@@ -140,5 +140,113 @@ def preprocess_age(adata):
             age_category.append('70+')
     
     adata.obs['age_category'] = age_category
+
+
+    # preprocess sex column
+    sex_cleaned = []
+    unknown_markers = {
+        "not provided", "not collected", "restricted access", "missing",
+        "na", "n/a", "unspecified", "unknown", "none", "not providednot provided", ""
+    }
+    other_markers = {"neuter", "labcontrol test", "other"}
+
+    for sval in adata.obs["sex"]:
+        if pd.isna(sval):
+            sex_cleaned.append("unknown")
+            continue
+
+        if sval == "female" or sval == "famale":
+            sex_cleaned.append("female")
+        elif sval == "male":
+            sex_cleaned.append("male")
+        elif sval in unknown_markers:
+            sex_cleaned.append("unknown")
+        elif sval.isdigit():  # e.g., "47", "48"
+            sex_cleaned.append("unknown")
+        elif sval in other_markers:
+            sex_cleaned.append("other")
+        else:
+            sex_cleaned.append("other")
+
+    adata.obs['sex_cleaned'] = sex_cleaned
+
+    # preprocess bmi category
+    bmi_cat_cleaned = []
+    bmi_keep = {"underweight", "normal", "overweight", "obese"}
+    bmi_unknown = {"", "unspecified", "labcontrol test", "not collected"}
+
+    for bmi_val in adata.obs["bmi_cat"]:
+        if pd.isna(bmi_val) or bmi_val in bmi_unknown:
+            bmi_cat_cleaned.append("unknown")
+        elif bmi_val in bmi_keep:
+            bmi_cat_cleaned.append(bmi_val)
+        else:
+            bmi_cat_cleaned.append("unknown")
+
+    adata.obs["bmi_cat_cleaned"] = bmi_cat_cleaned
     
+    
+    # preprocess IBD column (exact values observed)
+    ibd_cleaned = []
+    ibd_yes = {
+        "colitis",
+        "crohns",
+        "diagnosed by a medical professional (doctor, physician assistant)",
+        "self-diagnosed",
+        "diagnosed by an alternative medicine practitioner",
+        "yes.ibs"
+    }
+    ibd_no = {
+        "i do not have this condition",
+        "no",
+    }
+    ibd_unknown = {"", "unspecified", "not provided", "not collected"}
+
+    for ibd_val in adata.obs["IBD"]:
+        if pd.isna(ibd_val) or ibd_val in ibd_unknown:
+            ibd_cleaned.append("unknown")
+        elif ibd_val in ibd_no:
+            ibd_cleaned.append("no")
+        elif ibd_val in ibd_yes:
+            ibd_cleaned.append("yes")
+        else:
+            ibd_cleaned.append("unknown")
+
+    adata.obs["ibd_cleaned"] = ibd_cleaned
+    
+    
+    # preprocess diabetes
+    diabetes_cleaned = []
+    diab_yes = {
+        "diabetic",
+        "yes.type.i",
+        "diagnosed by a medical professional (doctor, physician assistant)",
+        "self-diagnosed",
+        "diagnosed by an alternative medicine practitioner",
+        "prediabetic",  # maybe wrong here
+    }
+    diab_no = {
+        "i do not have this condition",
+        "no",
+        "normoglycemic", # means normal blood sugar
+    }
+    diab_unknown = {
+        "", "unspecified", "not provided", "not collected",
+        "1.0", "2.0", "3.0", "4.0", "5.0", "6.0",  # codes for diabets type ??
+    }
+
+    for d_val in adata.obs["diabetes"]:
+        if pd.isna(d_val) or d_val in diab_unknown:
+            diabetes_cleaned.append("unknown")
+        elif d_val in diab_no:
+            diabetes_cleaned.append("no")
+        elif d_val in diab_yes:
+            diabetes_cleaned.append("yes")
+        else:
+            diabetes_cleaned.append("unknown")
+
+    adata.obs["diabetes_cleaned"] = diabetes_cleaned
+
+        
+
     return adata
