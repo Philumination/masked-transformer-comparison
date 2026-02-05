@@ -247,6 +247,10 @@ def preprocess_data(adata):
 
     adata.obs["diabetes_cleaned"] = diabetes_cleaned
 
-        
+    from skbio.stats.composition import clr
+    # Clr transformed Counts
+    adata.layers["Clrs"] = clr(adata.X.toarray() + 1)  # Add pseudocount for zeros
+
+    
 
     return adata
