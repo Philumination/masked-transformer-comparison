@@ -59,6 +59,7 @@ def preprocess_data(adata):
             age_numeric.append(100)
             continue
 
+
         # Handle ranges like '85-89' -> 87
         if '-' in age_str and age_str[0].isdigit():
             parts = age_str.split('-')
@@ -111,7 +112,7 @@ def preprocess_data(adata):
         # Direct conversion for numbers
         try:
             age = float(age_str)
-            if age < 0 or age > 120:
+            if age < 18 or age > 120: 
                 age_numeric.append(np.nan)
             else:
                 age_numeric.append(age)
@@ -126,10 +127,10 @@ def preprocess_data(adata):
     for age in adata.obs['age_numeric']:
         if pd.isna(age):
             age_category.append('Unknown')
-        elif age < 1:
-            age_category.append('0-1')
+        elif age < 1:  
+            age_category.append('0-1') #  should no longer exist
         elif age < 18:
-            age_category.append('1-18')
+            age_category.append('1-18') # should also no longer exist
         elif age < 30:
             age_category.append('18-30')
         elif age < 50:
