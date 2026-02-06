@@ -9,7 +9,7 @@ from analysis_src.config import MODELS_DIR, PROCESSED_DATA_DIR
 app = typer.Typer()
 
 
-@app.command()
+#@app.command()
 def main(
     # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ----
     features_path: Path = PROCESSED_DATA_DIR / "features.csv",

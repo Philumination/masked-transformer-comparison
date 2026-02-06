@@ -142,33 +142,21 @@ def preprocess_data(adata):
     
     adata.obs['age_category'] = age_category
 
-
     # preprocess sex column
     sex_cleaned = []
-    unknown_markers = {
-        "not provided", "not collected", "restricted access", "missing",
-        "na", "n/a", "unspecified", "unknown", "none", "not providednot provided", ""
-    }
-    other_markers = {"neuter", "labcontrol test", "other"}
-
+    
     for sval in adata.obs["sex"]:
         if pd.isna(sval):
-            sex_cleaned.append("unknown")
+            sex_cleaned.append(np.nan)
             continue
-
+        
         if sval == "female" or sval == "famale":
             sex_cleaned.append("female")
         elif sval == "male":
             sex_cleaned.append("male")
-        elif sval in unknown_markers:
-            sex_cleaned.append("unknown")
-        elif sval.isdigit():  # e.g., "47", "48"
-            sex_cleaned.append("unknown")
-        elif sval in other_markers:
-            sex_cleaned.append("other")
         else:
-            sex_cleaned.append("other")
-
+            sex_cleaned.append(np.nan)  # only female/male for 2 classes classification
+    
     adata.obs['sex_cleaned'] = sex_cleaned
 
     # preprocess bmi category
