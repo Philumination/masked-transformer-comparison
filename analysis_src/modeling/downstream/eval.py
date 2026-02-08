@@ -20,6 +20,7 @@ seed = 33
 #  regression
 def eval_regression(reps, y_series, baseline_X):
     
+    print(f"Evaluating regression task: {y_series.name}")
     mask = ~np.isnan(y_series)
     valid_idx = np.where(mask)[0]
     train_idx, test_idx = train_test_split(valid_idx, test_size=0.2, random_state=seed)
@@ -34,8 +35,12 @@ def eval_regression(reps, y_series, baseline_X):
 
     # Linear Models (Ridge) on all representations
     for name, X in reps.items():
+        print(f"  Evaluating representation: {name}")
+
         X_train, X_test = X[train_idx], X[test_idx]
         
+
+       
         # Ridge
         model = Pipeline([
             ("scaler", StandardScaler()),
@@ -46,6 +51,7 @@ def eval_regression(reps, y_series, baseline_X):
         
         r2 = r2_score(y_test, preds)
         rmse = np.sqrt(mean_squared_error(y_test, preds))
+        
         
         # XGBoost on representations
         xgb_reg = XGBRegressor(random_state=seed, n_jobs=-1, n_estimators=100)
@@ -73,13 +79,13 @@ def eval_regression(reps, y_series, baseline_X):
 
 # classification
 def eval_classification(reps, y_series, baseline_X):
-    # Filter BEFORE converting to string
+    print(f"Evaluating classification task: {y_series.name}")
+
     mask = y_series.notna()
     valid_idx = np.where(mask)[0]
     
     # NOW convert only valid values to string
     y_valid = y_series.iloc[valid_idx].astype(str)
-    
     le = LabelEncoder()
     y_encoded = le.fit_transform(y_valid)
 
@@ -95,8 +101,8 @@ def eval_classification(reps, y_series, baseline_X):
     }
 
     for name, X in reps.items():
+        print(f"  Evaluating representation: {name}")
         X_train, X_test = X[train_idx], X[test_idx]
-        
         # LogReg
         model = Pipeline([
             ("scaler", StandardScaler()),
@@ -107,7 +113,7 @@ def eval_classification(reps, y_series, baseline_X):
         
         acc = accuracy_score(y_test, preds)
         f1 = f1_score(y_test, preds, average="macro")
-        
+        print("logreg done now xgb")
         # xgb on representations
         xgb_clf = XGBClassifier(random_state=seed, n_jobs=-1, n_estimators=100)
         xgb_clf.fit(X_train, y_train)
@@ -120,9 +126,10 @@ def eval_classification(reps, y_series, baseline_X):
             'LogReg': {'Acc': acc, 'F1_macro': f1},
             'XGBoost': {'Acc': xgb_acc, 'F1_macro': xgb_f1}
         }
-
+        print("xgb done")
+    print("baseline xgb now")
     # XGBoost on raw CLRs
-    xgb = XGBClassifier(random_state=seed, n_jobs=-1, n_estimators=100)
+    xgb = XGBClassifier(random_state=seed, n_estimators=1000, n_jobs=-1)
     xgb.fit(baseline_X[train_idx], y_train)
     xgb_preds = xgb.predict(baseline_X[test_idx])
     

@@ -147,7 +147,7 @@ def preprocess_data(adata):
     
     for sval in adata.obs["sex"]:
         if pd.isna(sval):
-            sex_cleaned.append(np.nan)
+            sex_cleaned.append("unknown")
             continue
         
         if sval == "female" or sval == "famale":
@@ -155,7 +155,7 @@ def preprocess_data(adata):
         elif sval == "male":
             sex_cleaned.append("male")
         else:
-            sex_cleaned.append(np.nan)  # only female/male for 2 classes classification
+            sex_cleaned.append("unknown")  # only female/male for 2 classes classification
     
     adata.obs['sex_cleaned'] = sex_cleaned
 
