@@ -1,9 +1,9 @@
 from pathlib import Path
-
 from loguru import logger
 from tqdm import tqdm
 import typer
-
+import numpy as np
+import pandas as pd
 from analysis_src.config import PROCESSED_DATA_DIR, RAW_DATA_DIR
 
 app = typer.Typer()
@@ -29,8 +29,6 @@ if __name__ == "__main__":
     app()
 
 
-import pandas as pd
-import numpy as np
 
 def preprocess_data(adata):
     # preprocess age column
@@ -243,3 +241,24 @@ def preprocess_data(adata):
     
 
     return adata
+
+    
+from skbio.stats.composition import clr
+
+def mclr_transform(X, c=1):
+    # dense array
+    X = X.toarray() if hasattr(X, "toarray") else np.asarray(X)
+
+    X_clr = np.zeros_like(X, dtype=float)
+    
+    # clr for non zero
+    for i in range(X.shape[0]):
+        mask = X[i] > 0
+        if np.any(mask):
+            X_clr[i, mask] = clr(X[i, mask])
+
+    # shift to positive
+    min_val = X_clr[X_clr != 0].min() if np.any(X_clr != 0) else 0
+    X_clr[X_clr != 0] = X_clr[X_clr != 0] + abs(min_val) + c
+    
+    return X_clr.astype(np.float32)

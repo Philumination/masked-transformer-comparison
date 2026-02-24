@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore', message='n_jobs value .* overridden to 1 by se
 def precompute_representations(adata, seed=33):
     # standardize
     scaler = StandardScaler()
-    X_all = scaler.fit_transform(adata.layers["Clrs"])
+    X_all = scaler.fit_transform(adata.layers["mClrs"])
     adata.obsm["X_pca_50"] = PCA(n_components=50, random_state=seed).fit_transform(X_all)
     print("PCA done.")
     adata.obsm["X_umap_50"] = umap.UMAP(n_components=50, random_state=seed).fit_transform(X_all)
@@ -161,47 +161,5 @@ def plot_classification_results(classification_results):
         plt.tight_layout()
         plt.show()
 
-
-
-def plot_representation_umap(representation, target, figsize=(10, 8), alpha=0.3, s=5):
-
-    import umap.umap_ as umap
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    
-    reducer = umap.UMAP(n_components=2, n_neighbors=30, min_dist=0.1,random_state=33)
-    X_2d = reducer.fit_transform(representation)
-    
-    # plottting
-    fig, ax = plt.subplots(figsize=figsize)
-    
-    # check target
-    is_numeric = pd.api.types.is_numeric_dtype(target)
-    
-    if is_numeric:
-        # numeric
-        scatter = ax.scatter(X_2d[:, 0], X_2d[:, 1], 
-                           c=target, cmap='viridis', 
-                           s=s, alpha=alpha)
-        plt.colorbar(scatter, ax=ax)
-    else:
-        # categorical
-        if pd.api.types.is_categorical_dtype(target):
-            categories = target.cat.categories
-        else:
-            categories = np.unique(target)
-        
-        for category in categories:
-            mask = target == category
-            ax.scatter(X_2d[mask, 0], X_2d[mask, 1], 
-                      s=s, label=str(category), alpha=alpha)
-        
-        ax.legend(markerscale=2)
-    
-    ax.set_xlabel("UMAP 1")
-    ax.set_ylabel("UMAP 2")
-    ax.set_title(f"UMAP colored by target")
-    plt.tight_layout()
-    plt.show()
 
 
