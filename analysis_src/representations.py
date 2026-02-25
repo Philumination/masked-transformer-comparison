@@ -17,10 +17,10 @@ warnings.filterwarnings('ignore', message='n_jobs value .* overridden to 1 by se
 def precompute_representations(adata, seed=33):
     # standardize
     scaler = StandardScaler()
-    X_all = scaler.fit_transform(adata.layers["mClrs"])
-    adata.obsm["X_pca_50"] = PCA(n_components=50, random_state=seed).fit_transform(X_all)
+    X_all = scaler.fit_transform(adata.layers["Clrs"])
+    adata.obsm["X_pca_64"] = PCA(n_components=64, random_state=seed).fit_transform(X_all)
     print("PCA done.")
-    adata.obsm["X_umap_50"] = umap.UMAP(n_components=50, random_state=seed).fit_transform(X_all)
+    adata.obsm["X_umap_64"] = umap.UMAP(n_components=64, random_state=seed).fit_transform(X_all)
     print("UMAP done.")
 
     return adata

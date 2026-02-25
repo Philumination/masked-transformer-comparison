@@ -235,8 +235,27 @@ def preprocess_data(adata):
     adata.obs["diabetes_cleaned"] = diabetes_cleaned
 
     from skbio.stats.composition import clr
-    # Clr transformed Counts
-    adata.layers["Clrs"] = clr(adata.X.toarray() + 1)  # Add pseudocount for zeros
+    # mClrs
+    # c should probably be changed
+    c = 1
+
+    # dense array
+    X = adata.X.toarray()
+
+    X_clr = np.zeros_like(X, dtype=float)
+    
+    # clr for non zero
+    for i in range(X.shape[0]):
+        mask = X[i] > 0
+        if np.any(mask):
+            X_clr[i, mask] = clr(X[i, mask])
+
+    # shift to positive
+    min_val = X_clr[X_clr != 0].min() if np.any(X_clr != 0) else 0
+    X_clr[X_clr != 0] = X_clr[X_clr != 0] + abs(min_val) + c
+    
+
+    adata.layers["Clrs"] = X_clr.astype(np.float32)
 
     
 

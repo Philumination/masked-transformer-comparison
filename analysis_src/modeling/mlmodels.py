@@ -67,7 +67,7 @@ class MicrobiomeMaskedAutoencoder(nn.Module):
 
 # ran kinda fast 3h
 class MicrobiomeLatentTransformer(nn.Module):
-    def __init__(self, num_microbes, num_latents=128, d_model=128, nhead=4, num_layers=2):
+    def __init__(self, num_microbes, num_latents=128, d_model=64, nhead=4, num_layers=2):
         super().__init__()
         self.num_latents = num_latents
         self.d_model = d_model
@@ -159,14 +159,10 @@ class MicrobiomeLatentTransformer(nn.Module):
         )
         compressed = self.norm_cross(compressed + latents)
     
-        # Step 3: Process - THIS IS YOUR LOW-DIM REPRESENTATION
+        # Step 3: get lowdim representation 
         latent_representation = self.latent_transformer(compressed)  # [B, 128, D]
         
-        # Return flattened or pooled version:
-        # Option 1: Flatten [B, 128*D]
-        # return latent_representation.reshape(B, -1)
-        
-        # Option 2: Mean pool [B, D]
+        # Mean pool [B, D]
         return latent_representation.mean(dim=1)
     
 

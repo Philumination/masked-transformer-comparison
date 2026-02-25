@@ -178,7 +178,7 @@ def train_multi_mask(
         model_type = "transformer" if use_transformer else "mae"
         
         mask_prob_str = str(mask_prob).replace(".", "_")
-        csv_filename = f"{csv_dir}/{model_type}_mask_mclrs_{mask_prob_str}.csv"
+        csv_filename = f"{csv_dir}/{model_type}_mask_{mask_prob_str}.csv"
         pd.DataFrame(latent_vectors).to_csv(csv_filename, index=False)
         print(f"Saved embeddings to {csv_filename} with shape {latent_vectors.shape}")
     
@@ -234,10 +234,10 @@ class MicrobiomeDataset(Dataset):
     def __init__(self, adata):
         # Convert sparse matrix to dense if necessary, though ideally we handle sparse tensors
         # We now run on CLRs
-        if scipy.sparse.issparse(adata.layers["mClrs"]):
-            self.data = adata.layers["mClrs"].toarray()
+        if scipy.sparse.issparse(adata.layers["Clrs"]):
+            self.data = adata.layers["Clrs"].toarray()
         else:
-            self.data = adata.layers["mClrs"]
+            self.data = adata.layers["Clrs"]
 
         # Standardize inputs to Float32
         self.data = torch.tensor(self.data, dtype=torch.float32)
