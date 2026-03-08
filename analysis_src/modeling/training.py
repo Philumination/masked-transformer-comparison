@@ -4,6 +4,51 @@ import scipy.sparse
 from torch.utils.data import Dataset,  DataLoader
 import numpy as np
 
+
+#dataset
+
+class MicrobiomeDataset(Dataset):
+    def __init__(self, adata):
+        # Convert sparse matrix to dense if necessary, though ideally we handle sparse tensors
+        # We now run on CLRs
+        if scipy.sparse.issparse(adata.layers["Clrs"]):
+            self.data = adata.layers["Clrs"].toarray()
+        else:
+            self.data = adata.layers["Clrs"]
+
+        # Standardize inputs to Float32
+        self.data = torch.tensor(self.data, dtype=torch.float32)
+        self.n_samples, self.n_microbes = self.data.shape
+
+    def __len__(self):
+        return self.n_samples
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
+
+class MicrobiomeDataset_counts(Dataset):
+    def __init__(self, adata):
+        # Convert sparse matrix to dense if necessary, though ideally we handle sparse tensors
+        # We now run on raww counts
+        if scipy.sparse.issparse(adata.X):
+            self.data = adata.X.toarray()
+        else:
+            self.data = adata.X
+
+        # Standardize inputs to Float32
+        self.data = torch.tensor(self.data, dtype=torch.float32)
+        self.n_samples, self.n_microbes = self.data.shape
+
+    def __len__(self):
+        return self.n_samples
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+ 
+
+
 # simple training loop 
 def train_masked_model(model, dataloader, epochs=10, learning_rate=1e-3,
                         device=None, plot_loss=False, loss_weight=0.1,
@@ -86,7 +131,8 @@ def train_multi_mask(
     non_zero_bias=0.8,
     loss_weight=0.1,
     device=None,
-    csv_dir="../data/interim"
+    csv_dir="../data/interim",
+    dataset = MicrobiomeDataset,
 ):
   
     import pandas as pd
@@ -100,12 +146,15 @@ def train_multi_mask(
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    dataset = MicrobiomeDataset(adata)
+    dataset = dataset(adata)
+    print(f"dataset_name: {dataset.__class__.__name__}")
     trained_models = {}
     training_histories = {}
     
     for mask_prob in mask_probs:
         print(f"\n{'='*60}\nTraining with mask_prob={mask_prob}\n{'='*60}")
+        data_type = 'counts' if isinstance(dataset, MicrobiomeDataset_counts) else 'clrs'
+        print(f"will be saved as: {csv_dir}/{('transformer' if use_transformer else 'mae')}_nonzero_bias_{non_zero_bias}_data_{data_type}_mask_{str(mask_prob).replace('.', '_')}.csv")
         
         # Data loader with current mask prob
         collator = ZeroBiasedMaskCollator(mask_prob=mask_prob, non_zero_bias=non_zero_bias)
@@ -176,9 +225,10 @@ def train_multi_mask(
         # embedding extraction and csv savig
         latent_vectors = extract_embeddings_generic(model, dataset, device)
         model_type = "transformer" if use_transformer else "mae"
-        
+        data_type = "counts" if isinstance(dataset, MicrobiomeDataset_counts) else 'clrs'
         mask_prob_str = str(mask_prob).replace(".", "_")
-        csv_filename = f"{csv_dir}/{model_type}_mask_{mask_prob_str}.csv"
+        
+        csv_filename = f"{csv_dir}/{model_type}_nonzero_bias_{non_zero_bias}_data_{data_type}_mask_{mask_prob_str}.csv"
         pd.DataFrame(latent_vectors).to_csv(csv_filename, index=False)
         print(f"Saved embeddings to {csv_filename} with shape {latent_vectors.shape}")
     
@@ -230,25 +280,6 @@ class ZeroBiasedMaskCollator:
     
 
 
-class MicrobiomeDataset(Dataset):
-    def __init__(self, adata):
-        # Convert sparse matrix to dense if necessary, though ideally we handle sparse tensors
-        # We now run on CLRs
-        if scipy.sparse.issparse(adata.layers["Clrs"]):
-            self.data = adata.layers["Clrs"].toarray()
-        else:
-            self.data = adata.layers["Clrs"]
-
-        # Standardize inputs to Float32
-        self.data = torch.tensor(self.data, dtype=torch.float32)
-        self.n_samples, self.n_microbes = self.data.shape
-
-    def __len__(self):
-        return self.n_samples
-
-    def __getitem__(self, idx):
-        return self.data[idx]
-    
 
 # new generic embedding extraction 
 def extract_embeddings_generic(model, dataset, device, batch_size=32):

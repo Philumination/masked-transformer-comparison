@@ -51,7 +51,6 @@ class MicrobiomeMaskedAutoencoder(nn.Module):
         # Final reconstruction layer
         decoder_layers.append(nn.Linear(in_dim, num_microbes))
         # Note: No activation at the end (output is raw logits/continuous values).
-        # If your data is strictly counts, you might apply Softplus later or in the loss.
         self.decoder = nn.Sequential(*decoder_layers)
 
     def forward(self, x, mask=None):
@@ -72,13 +71,13 @@ class MicrobiomeLatentTransformer(nn.Module):
         self.num_latents = num_latents
         self.d_model = d_model
 
-        # --- 1. Embeddings (Same as your code) ---
+        # --- 1. Embeddings ---
         self.microbe_id_embedding = nn.Embedding(num_microbes, d_model)
         self.value_encoder = nn.Linear(1, d_model)
         self.mask_token = nn.Parameter(torch.randn(1, 1, d_model))
 
         # --- 2. The Bottleneck (Latents) ---
-        # These are the "seeds" for your low-dim representation
+        # These are the "seeds" for the low-dim representation
         self.latents = nn.Parameter(torch.randn(num_latents, d_model))
 
         # --- 3. Attention Layers ---
@@ -126,7 +125,7 @@ class MicrobiomeLatentTransformer(nn.Module):
         compressed = self.norm_cross(compressed + latents) # Residual
 
         # --- Step 3: Process (Deep reasoning on 128 dims) ---
-        # This is the "Low Dimensional Representation" you want!
+        # This is the "Low Dimensional Representation"
         latent_representation = self.latent_transformer(compressed) # [B, 128, D]
 
         # --- Step 4: Reconstruct (128 -> 4000) ---
